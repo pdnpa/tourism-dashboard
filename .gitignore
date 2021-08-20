@@ -7,9 +7,10 @@
 
 # User-specific files
 .Ruserdata
-*.rpem
+*.pem
 *.log
 *.txt
+*.R
 
 # Example code in package build process
 *-Ex.R
