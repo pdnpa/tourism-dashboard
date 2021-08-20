@@ -1,9 +1,9 @@
 ---
-title: "STEAM dashboard Report"
+title: "STEAM Dashboard Report"
 output: 
   flexdashboard::flex_dashboard:
     navbar:
-    - { title: "State of the Park Report", href: "https://pdnpa.github.io/stateofthepark/docs/Introduction/Getting-Started.html", align: right }
+    - { title: "PDNPA", href: "https://www.peakdistrict.gov.uk/", align: right }
     vertical_layout: scroll
     css: styles.css
     theme: cosmo
