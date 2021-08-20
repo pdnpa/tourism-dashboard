@@ -1,0 +1,367 @@
+---
+title: "STEAM dashboard Report"
+output: 
+  flexdashboard::flex_dashboard:
+    navbar:
+    - { title: "State of the Park Report", href: "https://pdnpa.github.io/stateofthepark/docs/Introduction/Getting-Started.html", align: right }
+    vertical_layout: scroll
+    css: styles.css
+    theme: cosmo
+    logo: millstone_icon_green.png
+    favicon: logo.ico
+
+---
+
+```{R}
+## Load Some Generic Packages
+library(flexdashboard)
+library(ggplot2)
+library(plotly)
+library(plyr)
+```
+
+About 
+=====================================  
+
+<blockquote class="blockquote-reverse">
+  <p>The Peak District STEAM Dashboard is an interactive one-stop shop for tourism volume and value data in the Peak District National Park.</p>
+  <small>Strategy and Performance Team <cite title="Research"></cite></small>
+</blockquote>
+
+
+
+<p>
+<h1>**Visitor Monitoring**</h1>
+</p>
+<p>The state of tourism in the Peak District National Park is influenced by the inherent characteristics of the place. Its treasured open landscapes, within striking distance a number of major cities, make it one of England's most accessible outdoor destinations. The Peak District National Park is surrounded by major urban conurbations with 13.4 million people living within an hour's drive of the national park boundary.</p>
+
+
+
+<p>This influences the type of visitor to the national park, as well as the associated economic, environmental and social impacts. Various surveys have tried to assess the volume of visits to the Peak District National Park. Estimates range from 13 million visitor days to 23 million visitor days each year. About half of visitors (48% Visitor Survey 2005) to the Peak District make only short visits (less than three hours) but they are often frequent repeat visitors. They are classed as 'leisure visitors' rather than tourists (who have to stay more than 3 hours). </p>
+
+
+
+<p>Quantifying both types of visitor is incredibly difficult without regular and comprehensive visitor surveying, which would be prohibitively expensive.We therefore use STEAM to assess the economic volume and value of tourist activity accross the Peak District for thise visitors who stay longer than three hours and are more likely to leave an economic footprint.</p>
+
+<h1>**STEAM Model**</h1>
+
+<p>STEAM is a tourism economic impact modelling process which approaches the measurement of tourism from the bottom up, through its use of local supply side data and tourism performance and visitor survey data collection.  The STEAM process is designed to engage the client and maximise the benefit of local tourism expertise. The STEAM process is essentially a structured framework with the capacity to accept a wide range of tourism input data.  All of these inputs can be adjusted monthly, to reflect seasonal variations in supply and demand or to reflect specific reporting requirements.</p>
+
+
+<p>STEAM quantifies the local economic impact of tourism, from both staying and day visitors, through analysis and use of a variety of inputs including visitor attraction numbers, tourist accommodation bedstock,  events attendance, occupancy levels, accommodation tariffs, macro-economic factors, visitor expenditure levels, transport use levels and tourism-specific economic multipliers. Throughout the year, we continuously review STEAM input data and consider, for each reporting area, the robustness of the inputs.  This review process ensures that any identified weaknesses in data flow can be addressed.</p>
+
+
+
+<p>STEAM uses the above input data to generate a series of impact analyses, relating to four key visitor types:
+
+1. Staying in Serviced Accommodation
+2. Staying in Non-Serviced Accommodation
+3. Staying with Friends and Relatives (SFR)
+4. Tourist Day Visitors</p>
+
+
+
+<p>Within the model, the above visitor types are broken down further into sub-categories of accommodation use and, where required, sub-types of day or SFR visitor.  This allows the model to ensure that its outputs reflect the differences in supply and consumption of tourism services between different types of tourism business.  It carries a further benefit in that the outputs relating to specific sub-categories of visitor can be presented in isolation, excluded or combined to reflect specific reporting needs..</p>
+
+More information can be found at [http://www.globaltourismsolutions.co.uk/steam-model](http://www.globaltourismsolutions.co.uk/steam-model)
+
+STEAM has been calculated to the National Park Boundary and the influence area which is defined as the extent of the landscape character area. See map below. 
+
+
+### Map of the STEAM Influence Area Boundary
+
+```{r}
+## Require
+library(leaflet)
+library(rgdal)
+library(jsonlite)
+
+## Load the Data
+topoData <- readLines("PDNPPoly.geojson") %>% paste(collapse = "\n")
+
+##Create MAP
+leaflet() %>% 
+setView(lng = -1.7, lat = 53.33, zoom = 9) %>%
+addTiles() %>%
+
+addGeoJSON(topoData, weight = 5, color = "#444444", fill = FALSE, group = "Data Boundary STEAM") %>%
+
+addLegend("bottomright", colors = "#444444", labels = "Data Boundary STEAM") %>%
+
+addLayersControl(
+  overlayGroups = "Data Boundary STEAM",
+  options = layersControlOptions(collapsed = FALSE)
+)
+```
+
+Key Measures {data-orientation=rows}
+=====================================   
+<p>
+<h1>**Key Measures**</h1>
+</p>
+<p>Presented here are the key indicators for STEAM data in the PDNP. Here both data for the PDNP and PDNP including influence area (PDNP + inf) are presented. All other sections will only include PDNP including the influence area. Most National Parks use their boundary plus influence area to monitor tourism. This is because the Peak District Destination is much more than the protected area boundary</p>
+
+<p>**FTEs** = Full Time Equivalent jobs supported<br>
+**£000s / 000s** = thousands of pounds or thousands of tourist days / tourist numbers<br>
+**£m / m** = millions of pounds or millions of tourist days / tourist numbers<br>
+**£bn / bn** = billions of pounds or billions of tourist days / tourist numbers</p>
+
+<p>**Visitor Numbers** / **Visitor Days** / **Average Length of Stay**
+The term **Visitor Numbers** relates to the estimated number of individual visits to the area. Each type of visitor tends to stay, on average, a different length of time (Average Length of Stay). The
+term **Visitor Days** relates to the estimated number of days spent within the area by the different visitor types. If you divide the visitor days by visitor numbers, you have the **Average Length of
+Stay** for that Visitor Type.</p>
+   
+Row {data-height=500}
+-------------------------------------
+
+### Visitor Days 
+
+```{r}
+Key_Measures <- read.csv("Key_Measures.csv")
+Key_Measures$Year <- as.character(Key_Measures$Year)
+p <- ggplot(Key_Measures, aes(Year, y=Visitor_Days, fill=Area)) + 
+    geom_bar(stat="identity", position = "dodge") + 
+    labs(y = "Visitor Days (Millions)") +
+    scale_fill_manual(values=c("#999999", "#f19419")) +
+    theme(panel.background = element_rect(fill = '#ffffff'), legend.position = "bottom")
+ggplotly(p) 
+```
+
+
+### Visitor Numbers
+
+```{r}
+p <- ggplot(Key_Measures, aes(Year, y=Visitor_Numbers, fill=Area)) + 
+    geom_bar(stat="identity", position = "dodge") + 
+    labs(y = "Visitor Numbers (Millions)") +
+        scale_fill_manual(values=c("#999999", "#f19419")) +
+    theme(panel.background = element_rect(fill = '#ffffff'), legend.position = "bottom")
+ggplotly(p)
+``` 
+
+Row {data-height=500}
+-------------------------------------
+   
+### Economic Impact
+
+```{r}
+p <- ggplot(Key_Measures, aes(Year, y=Economic_Impact, fill=Area)) + 
+    geom_bar(stat="identity", position = "dodge") + 
+    labs(y = "Economic Impact (Millions)") +
+        scale_fill_manual(values=c("#999999", "#f19419")) +
+    theme(panel.background = element_rect(fill = '#ffffff'), legend.position = "bottom")
+ggplotly(p)
+```   
+    
+### Employment 
+
+```{r}
+p <- ggplot(Key_Measures, aes(Year, y=Employment, fill=Area)) + 
+    geom_bar(stat="identity", position = "dodge") + 
+    labs(y = "Employment (Thousands)") +
+        scale_fill_manual(values=c("#999999", "#f19419")) +
+    theme(panel.background = element_rect(fill = '#ffffff'), legend.position = "bottom")
+ggplotly(p)
+```
+
+Volume {data-orientation=rows}
+=====================================   
+<p>
+<h1>**Volume**</h1>
+</p>
+<p>The Peak District attracts 13.43 million Visitor Days to the wider influence area. From this point forward all data will refer to the wider influence area unless stated. Using STEAM data only, this makes the Peak District the fifth most visited national park in England. However, in reality, tourist numbers for the Peak District are much higher as Leisure Day visitors are not counted as part of the STEAM model.<br>
+
+Overall, this represents an increase of 19% of visitor days between 2009 and 2019. Comparable time series data for all national parks in England is not yet available for 2018 or 2019. Absolute tourist numbers have also increased (2009-2019), and, importantly for the tourism economy, there has been a growth in the proportion of overnight staying visitors to the area (9.6% growth between 2009-2019).</p>
+
+<p>**FTEs** = Full Time Equivalent jobs supported<br>
+**£000s / 000s** = thousands of pounds or thousands of tourist days / tourist numbers<br>
+**£m / m** = millions of pounds or millions of tourist days / tourist numbers<br>
+**£bn / bn** = billions of pounds or billions of tourist days / tourist numbers</p>
+   
+Row {data-height=435}
+-------------------------------------
+
+### Visitor Numbers
+
+```{r}
+MVN <- read.csv("Monthly_Visitor_Numbers.csv", row.names=1)
+knitr::kable(MVN)
+```
+
+Row {data-height=435}
+-------------------------------------
+   
+### Visitor Days
+
+```{r}
+MVD <- read.csv("Monthly_Visitor_Days.csv", row.names=1)
+knitr::kable(MVD)
+``` 
+    
+
+Value {data-orientation=rows}
+=====================================   
+<p>
+<h1>**Value**</h1>
+</p>
+<p>Long term trends (between 2009 and 2019) in the Peak District show the overall economic impact of tourism has increased by 60% in the Peak District and influence area and by 19.1% indexed to price inflation 2019. The total economic impact stands at an estimated £730 million, which is measured by two categories: direct (income derived from expenditure) and indirect (secondary expenditure) revenue. Both categories have increased by 10% over the last 3 years [2]. In terms of other English national parks, the Peak District share by area accounted for 12% of the total economic impact in 2015 (£4983 million per annum).</p>
+
+<p>**FTEs** = Full Time Equivalent jobs supported<br>
+**£000s / 000s** = thousands of pounds or thousands of tourist days / tourist numbers<br>
+**£m / m** = millions of pounds or millions of tourist days / tourist numbers<br>
+**£bn / bn** = billions of pounds or billions of tourist days / tourist numbers</p>
+
+Row {data-height=600}
+-------------------------------------
+   
+### Direct Expenditure £Million
+
+```{r}
+labels = c("Accomodation", "Food & Drink", "Recreation", "Shopping", "Transport", "VAT")
+values = c(92.28, 114.14, 44.81, 140.61, 61.27, 90.62)
+
+fig <- plot_ly(type='pie', labels=labels, values=values, 
+               textinfo='label+percent+values',
+               insidetextorientation='radial')
+fig
+
+```   
+    
+### Total Economic Impact (Month 2019)
+
+```{r}
+month <- c("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
+million <- c(27.11, 34.57, 42.44, 69.30, 84.19, 74.54, 93.21, 95.42, 79.18, 54.93, 40.43, 34.33)
+data <- data.frame(month, million)
+data$month <- factor(data$month, levels = data[["month"]])
+
+fig <- plot_ly(data, x = ~month, y = ~million, type = 'scatter', mode = 'lines', line = list(color = 'rgb(241, 148, 25)', width = 4))
+
+fig
+```
+   
+Row {data-height=435}
+-------------------------------------
+
+### Value £ Million
+
+```{r}
+MVS <- read.csv("Visitor_Spend.csv", row.names=1)
+knitr::kable(MVS)
+```
+
+
+Employment {data-orientation=rows}
+===================================== 
+<p>
+<h1>**Employment**</h1>
+</p>
+<p>In 2019, employment supported by tourism was 10,382 jobs, representing a large proportion of the Peak District employment market. However, jobs in this industry can often be low skilled and seasonal. Accommodation is the largest sector to provide jobs, a third of all jobs in Tourism. Employment supported by tourism has increased by 13% between 2009 and 2019.</p>
+
+<p>**FTEs** = Full Time Equivalent jobs supported<br>
+**£000s / 000s** = thousands of pounds or thousands of tourist days / tourist numbers<br>
+**£m / m** = millions of pounds or millions of tourist days / tourist numbers<br>
+**£bn / bn** = billions of pounds or billions of tourist days / tourist numbers</p>
+
+Row {data-height=600}
+-------------------------------------
+   
+### Sectoral Distribution of Employment
+
+```{r}
+labels = c("Accomodation", "Food & Drink", "Recreation", "Shopping", "Transport", "Indirect Employment")
+values = c(3470, 1776, 846, 1995, 426, 1869)
+
+fig <- plot_ly(type='pie', labels=labels, values=values, 
+               textinfo='label+percent+values',
+               insidetextorientation='radial')
+fig
+
+```   
+    
+### Total Economic Impact (Month 2019)
+
+```{r}
+month <- c("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
+FTE <- c(6378, 7281, 8162, 11620, 13387, 12231, 13798, 14059, 12831, 9733, 7958, 7150)
+data_EI <- data.frame(month, FTE)
+data_EI$month <- factor(data_EI$month, levels = data_EI[["month"]])
+
+fig <- plot_ly(data_EI, x = ~month, y = ~FTE, type = 'scatter', mode = 'lines', line = list(color = 'rgb(241, 148, 25)', width = 4))
+
+fig
+```
+   
+Row {data-height=600}
+-------------------------------------
+
+### Employment FTE Year and Month
+
+```{r}
+Empl <- read.csv("Employment.csv", row.names=1)
+knitr::kable(Empl)
+```
+
+
+
+Accommodation {data-orientation=rows}
+=====================================
+<p>
+<h1>**Accomodation**</h1>
+</p>
+<p>In the Peak District Non Serviced Accommodation is the largest sector accounting for nearly 8 in every 10 beds. Again the availablilty of Accomodation can be seasonal as many caravan parks close.</p>
+
+<p>**FTEs** = Full Time Equivalent jobs supported<br>
+**£000s / 000s** = thousands of pounds or thousands of tourist days / tourist numbers<br>
+**£m / m** = millions of pounds or millions of tourist days / tourist numbers<br>
+**£bn / bn** = billions of pounds or billions of tourist days / tourist numbers</p>
+
+   
+Row {data-height=200}
+-------------------------------------
+
+### Serviced Accommodation
+
+```{r}
+Accomm <- read.csv("Accomm.csv", row.names=1)
+knitr::kable(Accomm)
+```
+
+### Non-Serviced Accommodation
+
+
+```{r}
+Accomm2 <- read.csv("Accomm2.csv", row.names=1)
+knitr::kable(Accomm2)
+```
+
+
+### Distribution by type of Accommodation
+
+```{r}
+Accomm3 <- read.csv("Accomm3.csv", row.names=1)
+knitr::kable(Accomm3)
+```
+
+
+Row {data-height=300}
+-------------------------------------
+
+### Accommodation Bed Suply by momth 2019
+
+```{r}
+month <- c("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
+Serviced <- c(6266,6277,6289,6295,6295,6295,6295,6295,6295,6295,6281,6272)
+Non_Serviced <- c(13983,15094,21062,23907,23919,23919,23919,23799,23906,23292,17045,14579)
+data_AC <- data.frame(month, Serviced, Non_Serviced)
+data_AC$month <- factor(data_AC$month, levels = data_EI[["month"]])
+
+fig <- plot_ly(data_AC, x = ~month, y = ~Serviced, type = 'bar', name = "Serviced Accommodation", marker = list(color = 'rgb(49,130,189)'))
+fig <- fig %>% add_trace(y = ~Non_Serviced, name = "Non Serviced Accommodation", marker = list(color = 'rgb(241,148,25)'))
+fig <- fig %>% layout(yaxis = list(title = 'Bed Supply'), barmode = 'stack')
+
+fig
+```
+
+
+
